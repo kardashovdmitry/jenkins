@@ -1,0 +1,125 @@
+<apex:page showHeader="true" sidebar="false" controller="VueDataTableExampleController">
+    <apex:stylesheet value="{!URLFOR($Resource.VueDataTableExample, 'Material.css')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.VueDataTableExample, 'vuetify.min.css')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.VueDataTableExample, 'vue.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.VueDataTableExample, 'vuetify.js')}"/>
+
+    <html xmlns:v-bind="http://vue.org" xmlns:v-on="http://vue.org">
+        <body>
+            <div id="app">
+                <v-app id="inspire">
+                    <v-card>
+                        <v-card-title>
+                            Accounts
+                            <v-spacer></v-spacer>
+                            <v-text-field
+                                append-icon="search"
+                                label="Search"
+                                single-line=''
+                                hide-details=''
+                                v-model="search"
+                                ></v-text-field>
+                        </v-card-title>
+                        <v-data-table
+                            v-bind:headers="headers"
+                            v-bind:items="items"
+                            v-bind:search="search"
+                            >
+                            <template slot="items" scope="props">
+                                <td>
+                                    <v-edit-dialog
+                                        lazy=''>
+                                        {{ props.item.Name }}
+                                        <v-text-field
+                                            slot="input"
+                                            label="Edit"
+                                            v-model="props.item.Name"
+                                            v-on:blur="updateAccount(props.item)"
+                                            single-line=''
+                                            counter=''
+                                            ></v-text-field>
+                                    </v-edit-dialog>
+                                </td>
+                                <td class="text-xs-right">{{ props.item.Phone }}</td>
+                                <td class="text-xs-right">{{ props.item.Type }}</td>
+                                <td class="text-xs-right">{{ props.item.NumberOfEmployees }}</td>
+                            </template>
+                            <template slot="pageText" scope="{ pageStart, pageStop }">
+                                From {{ pageStart }} to {{ pageStop }}
+                            </template>
+                        </v-data-table>
+                    </v-card>
+                </v-app>
+            </div>
+            <script>
+                var app = new Vue({
+                el: '#app',
+                data() {
+                    return {
+                        tmp: '',
+                        search: '',
+                        pagination: {},
+                        headers: [{
+                                text: 'Name',
+                                align: 'left',
+                                value: 'Name'
+                            },
+                            {
+                                text: 'Phone',
+                                value: 'Phone'
+                            },
+                            {
+                                text: 'Type',
+                                value: 'Type'
+                            },
+                            {
+                                text: 'NumberOfEmployees',
+                                value: 'NumberOfEmployees'
+                            }
+                        ],
+
+                        items: []
+                    }
+                },
+
+                methods: {
+                    updateAccount: function (account) {
+                        Visualforce.remoting.Manager.invokeAction(
+                            '{!$RemoteAction.VueDataTableExampleController.updateAccount}', JSON.stringify(account),
+                            function (result, event) {
+                                if (event.status) {
+                                    console.log('event.status', event.status);
+                                } else if (event.type === 'exception') {
+                                    console.log('exception');
+                                } else {
+                                    console.log(event.type);
+                                }
+                            }, {
+                                escape: true
+                            }
+                        );
+                    }
+                },
+
+                beforeMount() {
+                    Visualforce.remoting.Manager.invokeAction(
+                        '{!$RemoteAction.VueDataTableExampleController.getAccounts}',
+                        function (result, event) {
+                            if (event.status) {
+                                app.items = result;
+                            } else if (event.type === 'exception') {
+                                console.log('exception');
+                            } else {
+                                console.log(event.type);
+                            }
+                        }, {
+                            escape: true
+                        }
+                    );
+                }
+            })
+            </script>
+        </body>
+    </html>
+
+</apex:page>
