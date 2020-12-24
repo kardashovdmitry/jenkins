@@ -18,5 +18,6 @@ public with sharing class VueDataTableExampleController {
         Account updatedAccount = (Account)JSON.deserialize(accountToUpdate, Account.class);
         update updatedAccount;
     }
+    
 
 }
